@@ -65,6 +65,6 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-
+module.exports = app;
 
 
