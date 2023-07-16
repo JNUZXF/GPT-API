@@ -18,27 +18,17 @@ document.getElementById('form').addEventListener('submit', function (event) {
     })
       .then(response => {
         const reader = response.body.getReader();
-        return new ReadableStream({
-          start(controller) {
-            function push() {
-              reader.read().then(({done, value}) => {
-                if (done) {
-                  controller.close();
-                  return;
-                }
-                controller.enqueue(value);
-                push();
-              });
-            };
-            push();
+        const decoder = new TextDecoder('utf-8');
+        let result = '';
+
+        reader.read().then(function processText({ done, value }) {
+          if (done) {
+            const botMessage = JSON.parse(result).choices[0].message.content;
+            messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
+            return;
           }
+          result += decoder.decode(value);
+          return reader.read().then(processText);
         });
-      })
-      .then(stream => {
-        return new Response(stream, { headers: { "Content-Type": "text/plain" } }).text();
-      })
-      .then(result => {
-        const botMessage = JSON.parse(result).choices[0].message.content;
-        messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
       });
 });
