@@ -20,18 +20,23 @@ document.getElementById('form').addEventListener('submit', function (event) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
         let buffer = '';
-        let botMessage = '';
+        let botMessageElement = null;
 
         function processEvent(event) {
           console.log(event);  // Print the event data
           if (event === '[DONE]') {
-            // If the event is "[DONE]", add the buffered message to the page and reset the buffer
-            messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
-            botMessage = '';
+            // If the event is "[DONE]", create a new message element for the next message
+            botMessageElement = null;
           } else {
             try {
               const data = JSON.parse(event);
-              botMessage += data.choices[0].delta.content;
+              if (!botMessageElement) {
+                // If there is no current message element, create a new one
+                botMessageElement = document.createElement('div');
+                messagesElement.appendChild(botMessageElement);
+              }
+              // Append the new content to the current message
+              botMessageElement.textContent += data.choices[0].delta.content;
             } catch (error) {
               console.error('Error parsing JSON', error);
             }
