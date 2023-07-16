@@ -1,43 +1,38 @@
-// chat.js
-import fetch from 'node-fetch';
+const fetch = require('node-fetch');
 
-export default async (req, res) => {
+module.exports = async (req, res) => {
   const { messages } = req.body;
+  const model = 'gpt-3.5-turbo';
+  const baseURL = 'api.openai.com';
+  const key = process.env.OPENAI_API_KEY;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [...messages, { role: 'system', content: 'You are a helpful assistant.' }],
-      stream: true,
-    })
-  });
+  try {
+    const response = await fetch(`https://${baseURL}/v1/chat/completions`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${key}`,
+      },
+      method: 'POST',
+      body: JSON.stringify({
+        model,
+        messages: messages.map(message => ({
+          role: message.role,
+          content: message.content,
+        })),
+        temperature: 0.5,
+        stream: false, // Change stream to false
+      }),
+    });
 
-  if (!response.ok) {
-    res.status(response.status).json(await response.text());
-    return;
+    if (!response.ok) {
+      res.status(response.status).json(await response.text());
+      return;
+    }
+
+    const result = await response.json(); // Get the result as JSON
+    res.send(result); // Send the result as JSON
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
   }
-
-  res.set({
-    'Content-Type': 'text/plain',
-    'Transfer-Encoding': 'chunked'
-  });
-
-  const decoder = new TextDecoder();
-  const reader = response.body.getReader();
-  let data;
-
-  while (!(data = await reader.read()).done) {
-    const text = decoder.decode(data.value);
-    const match = text.match(/"content":"(.*?)"/);
-    const content = match ? match[1] : '';
-
-    res.write(content);
-  }
-
-  res.end();
 };
