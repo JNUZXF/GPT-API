@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
           content: message.content,
         })),
         temperature: 0.5,
-        stream: false,
+        stream: True,
       }),
     });
 
