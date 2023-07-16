@@ -29,19 +29,15 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // Read the response data to a string
-    const reader = openaiResponse.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let result = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      result += decoder.decode(value || new Uint8Array(), { stream: !done });
-      if (done) break;
-    }
+    let data = '';
+    openaiResponse.body.on('data', (chunk) => {
+      data += chunk.toString();
+    });
 
-    console.log(result);  // Print the response data
-
-    res.send(result);  // Send the response data to the client
+    openaiResponse.body.on('end', () => {
+      console.log(data);  // Print the response data
+      res.send(data);  // Send the response data to the client
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.toString() });
