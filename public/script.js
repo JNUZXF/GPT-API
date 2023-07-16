@@ -23,8 +23,18 @@ document.getElementById('form').addEventListener('submit', function (event) {
 
         reader.read().then(function processText({ done, value }) {
           if (done) {
-            const botMessage = JSON.parse(result).choices[0].message.content;
-            messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
+            const lines = result.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);  // Remove the "data: " prefix
+                try {
+                  const botMessage = JSON.parse(data).choices[0].message.content;
+                  messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
+                } catch (error) {
+                  console.error('Error parsing JSON', error);
+                }
+              }
+            }
             return;
           }
           result += decoder.decode(value);
