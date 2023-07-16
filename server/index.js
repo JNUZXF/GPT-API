@@ -29,7 +29,7 @@ app.post('/api/chat', async (req, res) => {
           content: message.content,
         })),
         temperature: 0.5,
-        stream: true,
+        stream: false, // Change stream to false
       }),
     });
 
@@ -37,28 +37,8 @@ app.post('/api/chat', async (req, res) => {
       res.status(response.status).json(response.body);
     }
 
-    const stream = new ReadableStream({
-      start(controller) {
-        const decoder = new TextDecoder();
-        const encoder = new TextEncoder();
-        response.body
-          .on('data', data => {
-            controller.enqueue(encoder.encode(data));
-          })
-          .on('end', () => {
-            controller.close();
-          });
-      },
-    });
-
-    const reader = stream.getReader();
-    let result = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      result += new TextDecoder().decode(value);
-    }
-    res.send(JSON.parse(result));
+    const result = await response.json(); // Get the result as JSON
+    res.send(result); // Send the result as JSON
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
@@ -66,4 +46,3 @@ app.post('/api/chat', async (req, res) => {
 });
 
 module.exports = app;
-
