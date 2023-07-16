@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { PassThrough } = require('stream');
 
 module.exports = async (req, res) => {
   const { messages } = req.body;
@@ -20,7 +21,7 @@ module.exports = async (req, res) => {
           content: message.content,
         })),
         temperature: 0.5,
-        stream: true,  // Enable streaming
+        stream: true,
       }),
     });
 
@@ -29,7 +30,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    openaiResponse.body.pipe(res);  // Pipe the OpenAI response stream to the response
+    openaiResponse.body.pipe(new PassThrough()).pipe(res);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.toString() });
