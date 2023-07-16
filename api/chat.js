@@ -1,5 +1,4 @@
 const fetch = require('node-fetch');
-const { PassThrough } = require('stream');
 
 module.exports = async (req, res) => {
   const { messages } = req.body;
@@ -30,7 +29,19 @@ module.exports = async (req, res) => {
       return;
     }
 
-    openaiResponse.body.pipe(new PassThrough()).pipe(res);
+    // Read the response data to a string
+    const reader = openaiResponse.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let result = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      result += decoder.decode(value || new Uint8Array(), { stream: !done });
+      if (done) break;
+    }
+
+    console.log(result);  // Print the response data
+
+    res.send(result);  // Send the response data to the client
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.toString() });
