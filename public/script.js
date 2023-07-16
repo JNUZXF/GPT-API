@@ -19,26 +19,36 @@ document.getElementById('form').addEventListener('submit', function (event) {
       .then(response => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
-        let result = '';
+        let buffer = '';
 
-        reader.read().then(function processText({ done, value }) {
-          result += decoder.decode(value);
-          const lines = result.split('\n');
-          for (let i = 0; i < lines.length - 1; i++) {  // Exclude the last line, because it might be incomplete
-            const line = lines[i];
-            try {
-              const data = JSON.parse(line);
-              const botMessage = data.choices[0].message.content;
-              messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
-            } catch (error) {
-              console.error('Error parsing JSON', error);
-            }
+        function processEvent(event) {
+          try {
+            const data = JSON.parse(event);
+            const botMessage = data.choices[0].message.content;
+            messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
+          } catch (error) {
+            console.error('Error parsing JSON', error);
           }
-          result = lines[lines.length - 1];  // The last line might be incomplete, save it for the next chunk
+        }
+
+        function processText({ done, value }) {
+          buffer += decoder.decode(value, { stream: true });
+          let start = 0;
+          let end;
+          while ((end = buffer.indexOf('\n\n', start)) !== -1) {
+            const event = buffer.slice(start, end).trim();
+            if (event.startsWith('data: ')) {
+              processEvent(event.slice(6));
+            }
+            start = end + 2;
+          }
+          buffer = buffer.slice(start);
 
           if (!done) {
             return reader.read().then(processText);
           }
-        });
+        }
+
+        return reader.read().then(processText);
       });
 });
