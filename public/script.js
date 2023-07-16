@@ -22,6 +22,7 @@ document.getElementById('form').addEventListener('submit', function (event) {
         let buffer = '';
 
         function processEvent(event) {
+          console.log(event);  // Print the event data
           try {
             const data = JSON.parse(event);
             const botMessage = data.choices[0].message.content;
