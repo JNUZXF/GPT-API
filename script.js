@@ -25,12 +25,13 @@ document.getElementById('form').addEventListener('submit', function (event) {
           console.log(event);  // Print the event data
           try {
             const data = JSON.parse(event);
-            const botMessage = data.choices[0].message.content;
+            const botMessage = data.choices[0].delta.content;
             messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
           } catch (error) {
             console.error('Error parsing JSON', error);
           }
         }
+
 
         function processText({ done, value }) {
           buffer += decoder.decode(value, { stream: true });
