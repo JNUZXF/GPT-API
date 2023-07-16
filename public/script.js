@@ -22,23 +22,23 @@ document.getElementById('form').addEventListener('submit', function (event) {
         let result = '';
 
         reader.read().then(function processText({ done, value }) {
-          if (done) {
-            const lines = result.split('\n');
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const data = line.slice(6);  // Remove the "data: " prefix
-                try {
-                  const botMessage = JSON.parse(data).choices[0].message.content;
-                  messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
-                } catch (error) {
-                  console.error('Error parsing JSON', error);
-                }
-              }
-            }
-            return;
-          }
           result += decoder.decode(value);
-          return reader.read().then(processText);
+          const lines = result.split('\n');
+          for (let i = 0; i < lines.length - 1; i++) {  // Exclude the last line, because it might be incomplete
+            const line = lines[i];
+            try {
+              const data = JSON.parse(line);
+              const botMessage = data.choices[0].message.content;
+              messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
+            } catch (error) {
+              console.error('Error parsing JSON', error);
+            }
+          }
+          result = lines[lines.length - 1];  // The last line might be incomplete, save it for the next chunk
+
+          if (!done) {
+            return reader.read().then(processText);
+          }
         });
       });
 });
