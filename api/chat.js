@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   const key = process.env.OPENAI_API_KEY;
 
   try {
-    const response = await fetch(`https://${baseURL}/v1/chat/completions`, {
+    const openaiResponse = await fetch(`https://${baseURL}/v1/chat/completions`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${key}`,
@@ -20,17 +20,16 @@ module.exports = async (req, res) => {
           content: message.content,
         })),
         temperature: 0.5,
-        stream: True,
+        stream: true,  // Enable streaming
       }),
     });
 
-    if (!response.ok) {
-      res.status(response.status).json({ error: await response.text() });
+    if (!openaiResponse.ok) {
+      res.status(openaiResponse.status).json({ error: await openaiResponse.text() });
       return;
     }
 
-    const result = await response.json();
-    res.send(result);
+    openaiResponse.body.pipe(res);  // Pipe the OpenAI response stream to the response
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.toString() });
