@@ -16,14 +16,29 @@ document.getElementById('form').addEventListener('submit', function (event) {
       },
       body: JSON.stringify({ messages: [{role: 'user', content: userMessage}] })
     })
-      .then(response => response.json())
+      .then(response => {
+        const reader = response.body.getReader();
+        return new ReadableStream({
+          start(controller) {
+            function push() {
+              reader.read().then(({done, value}) => {
+                if (done) {
+                  controller.close();
+                  return;
+                }
+                controller.enqueue(value);
+                push();
+              });
+            };
+            push();
+          }
+        });
+      })
+      .then(stream => {
+        return new Response(stream, { headers: { "Content-Type": "text/plain" } }).text();
+      })
       .then(result => {
-        if (result.choices && result.choices.length > 0) {
-          const botMessage = result.choices[0].message.content;
-          messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
-        } else {
-          // Handle the case where there is no bot message
-          console.error('No bot message received', result);
-        }
+        const botMessage = JSON.parse(result).choices[0].message.content;
+        messagesElement.innerHTML += `<div>Bot: ${botMessage}</div>`;
       });
 });
