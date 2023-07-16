@@ -20,19 +20,19 @@ module.exports = async (req, res) => {
           content: message.content,
         })),
         temperature: 0.5,
-        stream: false, // Change stream to false
+        stream: false,
       }),
     });
 
     if (!response.ok) {
-      res.status(response.status).json(await response.text());
+      res.status(response.status).json({ error: await response.text() });
       return;
     }
 
-    const result = await response.json(); // Get the result as JSON
-    res.send(result); // Send the result as JSON
+    const result = await response.json();
+    res.send(result);
   } catch (error) {
     console.error(error);
-    res.sendStatus(500);
+    res.status(500).json({ error: error.toString() });
   }
 };
