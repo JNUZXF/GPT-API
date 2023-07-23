@@ -24,37 +24,31 @@ document.getElementById('form').addEventListener('submit', function (event) {
             const decoder = new TextDecoder('utf-8');
             let buffer = '';
 
-            function processText({ done, value }) {
-                buffer += decoder.decode(value, { stream: !done });
-
-                let start;
-                // Check if there's a complete event in the buffer
-                while ((start = buffer.indexOf('\n\n')) !== -1) {
-                    let eventStr = buffer.slice(0, start).trim();
-                    buffer = buffer.slice(start + 2);
-
-                    // Check if the string begins with "data: " and, if so, remove it before parsing
-                    if (eventStr.startsWith('data: ')) {
-                        eventStr = eventStr.slice(6);
-                    }
-
-                    try {
-                        const data = JSON.parse(eventStr);
-                        // Check if the choice has content
-                        if (data.choices[0].finish_reason === 'stop') {
-                            return;
-                        } else if (data.choices[0].delta.content) {
-                            contentElement.textContent += data.choices[0].delta.content;
-                        }
-                    } catch (error) {
-                        console.error('Error parsing JSON', error);
-                    }
+        function processText({ done, value }) {
+          buffer += decoder.decode(value, { stream: true });
+          let start = 0;
+          let end;
+          while ((end = buffer.indexOf('\n', start)) !== -1) {
+            const event = buffer.slice(start, end).trim();
+            if (event.startsWith('data: ')) {
+              const line = event.slice(6).trim();
+              // Check if the line might be JSON
+              if (line.startsWith('{') && line.endsWith('}')) {
+                const isDone = processEvent(line);
+                if (isDone) {
+                  break;
                 }
-
-                if (!done) {
-                    return reader.read().then(processText);
-                }
+              }
             }
+            start = end + 1;
+          }
+          buffer = buffer.slice(start);
+        
+          if (!done) {
+            return reader.read().then(processText);
+          }
+        }
+
 
             return reader.read().then(processText);
         });
