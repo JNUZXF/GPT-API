@@ -27,8 +27,8 @@ document.getElementById('form').addEventListener('submit', function (event) {
             function processText({ done, value }) {
                 buffer += decoder.decode(value, { stream: !done });
 
-                // Process all complete event stream messages in the buffer
                 let start;
+                // Check if there's a complete event in the buffer
                 while ((start = buffer.indexOf('\n\n')) !== -1) {
                     let eventStr = buffer.slice(0, start).trim();
                     buffer = buffer.slice(start + 2);
@@ -40,24 +40,12 @@ document.getElementById('form').addEventListener('submit', function (event) {
 
                     try {
                         const data = JSON.parse(eventStr);
-                        contentElement.textContent += data.choices[0].delta.content;
-                    } catch (error) {
-                        console.error('Error parsing JSON', error);
-                    }
-                }
-
-                // If stream is done and there's remaining buffer, process it as well
-                if (done && buffer.trim().length > 0) {
-                    let eventStr = buffer.trim();
-
-                    // Check if the string begins with "data: " and, if so, remove it before parsing
-                    if (eventStr.startsWith('data: ')) {
-                        eventStr = eventStr.slice(6);
-                    }
-
-                    try {
-                        const data = JSON.parse(eventStr);
-                        contentElement.textContent += data.choices[0].delta.content;
+                        // Check if the choice has content
+                        if (data.choices[0].finish.reason === 'stop') {
+                            contentElement.textContent += data.choices[0].finish.detail;
+                        } else if (data.choices[0].delta.content) {
+                            contentElement.textContent += data.choices[0].delta.content;
+                        }
                     } catch (error) {
                         console.error('Error parsing JSON', error);
                     }
