@@ -25,17 +25,15 @@ document.getElementById('form').addEventListener('submit', function (event) {
             let buffer = '';
 
             function processText({ done, value }) {
-                buffer += decoder.decode(value, { stream: true });
+                buffer += decoder.decode(value, { stream: !done });
 
-                // Process all complete JSON objects in the buffer
+                // Process all complete event stream messages in the buffer
                 let start;
-                while ((start = buffer.indexOf('{')) !== -1) {
-                    let end = buffer.indexOf('}', start);
-                    if (end === -1) break;  // Incomplete JSON object, wait for more data
-                    const jsonStr = buffer.slice(start, end + 1);
-                    buffer = buffer.slice(end + 1);
+                while ((start = buffer.indexOf('\n\n')) !== -1) {
+                    const eventStr = buffer.slice(0, start).trim();
+                    buffer = buffer.slice(start + 2);
                     try {
-                        const data = JSON.parse(jsonStr);
+                        const data = JSON.parse(eventStr);
                         contentElement.textContent += data.choices[0].delta.content;
                     } catch (error) {
                         console.error('Error parsing JSON', error);
@@ -43,9 +41,9 @@ document.getElementById('form').addEventListener('submit', function (event) {
                 }
 
                 // If stream is done and there's remaining buffer, process it as well
-                if (done && buffer.length > 0) {
+                if (done && buffer.trim().length > 0) {
                     try {
-                        const data = JSON.parse(buffer);
+                        const data = JSON.parse(buffer.trim());
                         contentElement.textContent += data.choices[0].delta.content;
                     } catch (error) {
                         console.error('Error parsing JSON', error);
