@@ -42,7 +42,7 @@ document.getElementById('form').addEventListener('submit', function (event) {
                         const data = JSON.parse(eventStr);
                         // Check if the choice has content
                         if (data.choices[0].finish_reason === 'stop') {
-                            contentElement.textContent += data.choices[0].finish.detail;
+                            return;
                         } else if (data.choices[0].delta.content) {
                             contentElement.textContent += data.choices[0].delta.content;
                         }
