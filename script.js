@@ -30,8 +30,14 @@ document.getElementById('form').addEventListener('submit', function (event) {
                 // Process all complete event stream messages in the buffer
                 let start;
                 while ((start = buffer.indexOf('\n\n')) !== -1) {
-                    const eventStr = buffer.slice(0, start).trim();
+                    let eventStr = buffer.slice(0, start).trim();
                     buffer = buffer.slice(start + 2);
+
+                    // Check if the string begins with "data: " and, if so, remove it before parsing
+                    if (eventStr.startsWith('data: ')) {
+                        eventStr = eventStr.slice(6);
+                    }
+
                     try {
                         const data = JSON.parse(eventStr);
                         contentElement.textContent += data.choices[0].delta.content;
@@ -42,8 +48,15 @@ document.getElementById('form').addEventListener('submit', function (event) {
 
                 // If stream is done and there's remaining buffer, process it as well
                 if (done && buffer.trim().length > 0) {
+                    let eventStr = buffer.trim();
+
+                    // Check if the string begins with "data: " and, if so, remove it before parsing
+                    if (eventStr.startsWith('data: ')) {
+                        eventStr = eventStr.slice(6);
+                    }
+
                     try {
-                        const data = JSON.parse(buffer.trim());
+                        const data = JSON.parse(eventStr);
                         contentElement.textContent += data.choices[0].delta.content;
                     } catch (error) {
                         console.error('Error parsing JSON', error);
