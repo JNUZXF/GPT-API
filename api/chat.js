@@ -28,7 +28,8 @@ module.exports = async (req, res) => {
       res.status(openaiResponse.status).json({ error: await openaiResponse.text() });
       return;
     }
-  res.send(data);
+  const result = await response.json();
+  res.send(result);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.toString() });
