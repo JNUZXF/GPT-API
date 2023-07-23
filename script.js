@@ -28,7 +28,7 @@ document.getElementById('form').addEventListener('submit', function (event) {
           console.log(event);  // Print the event data
           try {
             const data = JSON.parse(event);
-            contentElement.textContent += data.choices[0].message.delta.content;
+            contentElement.textContent += data.choices[0].message.content;
           } catch (error) {
             console.error('Error parsing JSON', error);
           }
