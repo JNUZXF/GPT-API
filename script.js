@@ -9,6 +9,9 @@ document.getElementById('form').addEventListener('submit', function (event) {
 
     messagesElement.innerHTML += `<div>User: ${userMessage}</div>`;
 
+    const contentElement = document.createElement('div');
+    messagesElement.appendChild(contentElement);
+
     fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -23,18 +26,11 @@ document.getElementById('form').addEventListener('submit', function (event) {
 
         function processEvent(event) {
           console.log(event);  // Print the event data
-          if (event === '[DONE]') {
-            // If the event is "[DONE]", do nothing
-          } else {
-            try {
-              const data = JSON.parse(event);
-              // Create a new element for each piece of content
-              const contentElement = document.createElement('div');
-              contentElement.textContent = data.choices[0].delta.content;
-              messagesElement.appendChild(contentElement);
-            } catch (error) {
-              console.error('Error parsing JSON', error);
-            }
+          try {
+            const data = JSON.parse(event);
+            contentElement.textContent += data.choices[0].message.content;
+          } catch (error) {
+            console.error('Error parsing JSON', error);
           }
         }
 
@@ -42,12 +38,12 @@ document.getElementById('form').addEventListener('submit', function (event) {
           buffer += decoder.decode(value, { stream: true });
           let start = 0;
           let end;
-          while ((end = buffer.indexOf('\n\n', start)) !== -1) {
+          while ((end = buffer.indexOf('\n', start)) !== -1) {
             const event = buffer.slice(start, end).trim();
             if (event.startsWith('data: ')) {
-              processEvent(event.slice(6));
+              processEvent(event.slice(6).trim());
             }
-            start = end + 2;
+            start = end + 1;
           }
           buffer = buffer.slice(start);
 
