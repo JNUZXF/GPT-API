@@ -28,8 +28,17 @@ module.exports = async (req, res) => {
       res.status(openaiResponse.status).json({ error: await openaiResponse.text() });
       return;
     }
-  const result = await response.json();
-  res.send(result);
+
+    res.setHeader('Content-Type', 'text/plain');
+
+    openaiResponse.body.on('data', (chunk) => {
+      res.write(chunk.toString());
+    });
+
+    openaiResponse.body.on('end', () => {
+      res.end();
+    });
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.toString() });
