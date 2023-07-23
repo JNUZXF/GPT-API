@@ -24,29 +24,33 @@ document.getElementById('form').addEventListener('submit', function (event) {
             const decoder = new TextDecoder('utf-8');
             let buffer = '';
 
-            function processEvent(event) {
-                console.log(event);  // Print the event data
-                try {
-                    const data = JSON.parse(event);
-                    console.log(data);  // Print the parsed data
-                    contentElement.textContent += data.choices[0].delta.content;
-                } catch (error) {
-                    console.error('Error parsing JSON', error);
-                }
-            }
-
             function processText({ done, value }) {
                 buffer += decoder.decode(value, { stream: true });
-                let start = 0;
-                let end;
-                while ((end = buffer.indexOf('\n\n', start)) !== -1) {
-                    const event = buffer.slice(start, end).trim();
-                    if (event.startsWith('data: ')) {
-                        processEvent(event.slice(6));
+
+                // Process all complete JSON objects in the buffer
+                let start;
+                while ((start = buffer.indexOf('{')) !== -1) {
+                    let end = buffer.indexOf('}', start);
+                    if (end === -1) break;  // Incomplete JSON object, wait for more data
+                    const jsonStr = buffer.slice(start, end + 1);
+                    buffer = buffer.slice(end + 1);
+                    try {
+                        const data = JSON.parse(jsonStr);
+                        contentElement.textContent += data.choices[0].delta.content;
+                    } catch (error) {
+                        console.error('Error parsing JSON', error);
                     }
-                    start = end + 2;
                 }
-                buffer = buffer.slice(start);
+
+                // If stream is done and there's remaining buffer, process it as well
+                if (done && buffer.length > 0) {
+                    try {
+                        const data = JSON.parse(buffer);
+                        contentElement.textContent += data.choices[0].delta.content;
+                    } catch (error) {
+                        console.error('Error parsing JSON', error);
+                    }
+                }
 
                 if (!done) {
                     return reader.read().then(processText);
