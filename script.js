@@ -41,7 +41,7 @@ document.getElementById('form').addEventListener('submit', function (event) {
                     try {
                         const data = JSON.parse(eventStr);
                         // Check if the choice has content
-                        if (data.choices[0].finish.reason === 'stop') {
+                        if (data.choices[0].finish_reason === 'stop') {
                             contentElement.textContent += data.choices[0].finish.detail;
                         } else if (data.choices[0].delta.content) {
                             contentElement.textContent += data.choices[0].delta.content;
