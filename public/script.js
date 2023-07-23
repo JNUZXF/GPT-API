@@ -9,6 +9,9 @@ document.getElementById('form').addEventListener('submit', function (event) {
 
     messagesElement.innerHTML += `<div>User: ${userMessage}</div>`;
 
+    const contentElement = document.createElement('div');
+    messagesElement.appendChild(contentElement);
+    
     fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -25,13 +28,13 @@ document.getElementById('form').addEventListener('submit', function (event) {
           console.log(event);  // Print the event data
           if (event === '[DONE]') {
             // If the event is "[DONE]", do nothing
+              
           } else {
             try {
               const data = JSON.parse(event);
               // Create a new element for each piece of content
-              const contentElement = document.createElement('div');
-              contentElement.textContent = data.choices[0].delta.content;
-              messagesElement.appendChild(contentElement);
+              
+              contentElement.textContent += data.choices[0].delta.content;
             } catch (error) {
               console.error('Error parsing JSON', error);
             }
