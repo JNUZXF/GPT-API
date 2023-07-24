@@ -21,7 +21,8 @@ module.exports = async (req, res) => {
           content: message.content,
         })),
         temperature: 0.5,
-        stream: true
+        max_tokens: 9999,
+        stream: true,
       }),
     });
 
@@ -33,18 +34,15 @@ module.exports = async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     
     // Instead of waiting for the entire response to arrive, start processing the data as soon as it arrives
-    const reader = openaiResponse.body.getReader();
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) {
-        break;
-      }
-
-      // Convert the Uint8Array to a string and send it to the client
-      const text = new TextDecoder().decode(value);
+    openaiResponse.body.on('data', (chunk) => {
+      // Convert the Buffer to a string and send it to the client
+      const text = chunk.toString();
       res.write(`data: ${text}\n\n`);
-    }
-    res.end();
+    });
+
+    openaiResponse.body.on('end', () => {
+      res.end();
+    });
 
   } catch (error) {
     console.error(error);
