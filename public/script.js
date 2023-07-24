@@ -6,7 +6,7 @@ document.getElementById('form').addEventListener('submit', async (event) => {
   const messagesContainer = document.getElementById('messages');
   
   const message = {
-    role: 'system',
+    role: 'user',
     content: inputField.value,
   };
   
