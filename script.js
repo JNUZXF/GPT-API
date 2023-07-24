@@ -20,7 +20,6 @@ document.getElementById('form').addEventListener('submit', async (event) => {
     },
     body: JSON.stringify({ messages: [message] }),
   });
-  console.log(response);
   const reader = response.body.getReader();
   let lastMessage = '';
 
@@ -52,7 +51,7 @@ async function readStream() {
       if (chunk.endsWith('\n')) {
         const messageObj = JSON.parse(chunk.slice(0, -1));
         const aiMessage = messageObj.choices[0].delta.content;
-
+        console.log(aiMessage);
         // Append the AI's message to the messages container, if it's not empty
         if (aiMessage) {
           messagesContainer.innerHTML += `<div class="message ai-message">${aiMessage}</div>`;
