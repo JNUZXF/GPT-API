@@ -43,11 +43,11 @@ async function readStream() {
 
     // Split the message into chunks by 'data: '
     const chunks = completeMessage.split('\n\ndata: ');
-    console.log(chunks);
+    
     // Parse each chunk and append the AI's message to the messages container
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-
+      console.log(chunk);
       // Only parse the chunk if it's a complete JSON object
       if (chunk.endsWith('\n')) {
         const messageObj = JSON.parse(chunk.slice(0, -1));
