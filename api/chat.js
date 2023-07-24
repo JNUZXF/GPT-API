@@ -36,6 +36,7 @@ module.exports = async (req, res) => {
     openaiResponse.body.on('data', (chunk) => {
       // Convert the Buffer to a string and send it to the client
       const text = chunk.toString();
+      console.log(text);
       res.write(`data: ${text}\n\n`);
     });
 
