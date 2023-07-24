@@ -13,14 +13,15 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const openaiResponse = await fetch(`https://${baseURL}/v1/engines/${model}/completions`, {
+    const openaiResponse = await fetch(`https://${baseURL}/v1/chat/completions`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${key}`,
       },
       method: 'POST',
       body: JSON.stringify({
-        messages,
+        model: "gpt-3.5-turbo",
+        messages:messages,
         temperature: 0.5,
         max_tokens: 9999
       }),
