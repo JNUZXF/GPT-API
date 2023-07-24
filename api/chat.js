@@ -1,16 +1,10 @@
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
-  const { messages } = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}');
+  const { messages } = req.body;
   const model = 'gpt-3.5-turbo';
   const baseURL = 'api.openai.com';
   const key = process.env.OPENAI_API_KEY;
-
-  // Ensure all messages have a 'role' and 'content' property
-  if (!messages.every(message => message.role && message.content)) {
-    res.status(400).json({ error: "All messages must have a 'role' and 'content' property." });
-    return;
-  }
 
   try {
     const openaiResponse = await fetch(`https://${baseURL}/v1/chat/completions`, {
