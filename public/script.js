@@ -20,7 +20,7 @@ document.getElementById('form').addEventListener('submit', async (event) => {
     },
     body: JSON.stringify({ messages: [message] }),
   });
-  // console.log(await response.text());
+  console.log(response);
 
   const reader = response.body.getReader();
   let lastMessage = '';
