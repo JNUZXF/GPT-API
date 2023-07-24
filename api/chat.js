@@ -15,7 +15,10 @@ module.exports = async (req, res) => {
       method: 'POST',
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
-        messages:messages,
+        messages: messages.map(message => ({
+          role: message.role,
+          content: message.content,
+        })),
         temperature: 0.5,
         max_tokens: 9999,
         stream:True
