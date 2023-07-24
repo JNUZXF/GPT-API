@@ -12,7 +12,7 @@ document.getElementById('form').addEventListener('submit', async (event) => {
 
   inputField.value = '';
   messagesContainer.innerHTML += `<div class="message user-message">${message.content}</div>`;
-
+  console.log(response);
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: {
