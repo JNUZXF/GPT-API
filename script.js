@@ -19,43 +19,19 @@ document.getElementById('form').addEventListener('submit', function (event) {
         },
         body: JSON.stringify({ messages: [{ role: 'user', content: userMessage }] })
     })
-        .then(response => {
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder('utf-8');
-            let buffer = '';
-
-            function processText({ done, value }) {
-                buffer += decoder.decode(value, { stream: !done });
-
-                let start;
-                // Check if there's a complete event in the buffer
-                while ((start = buffer.indexOf('\n\n')) !== -1) {
-                    let eventStr = buffer.slice(0, start).trim();
-                    buffer = buffer.slice(start + 2);
-
-                    // Check if the string begins with "data: " and, if so, remove it before parsing
-                    if (eventStr.startsWith('data: ')) {
-                        eventStr = eventStr.slice(6);
-                    }
-
-                    try {
-                        const data = JSON.parse(eventStr);
-                        // Check if the choice has content
-                        if (data.choices[0].finish_reason === 'stop') {
-                            return;
-                        } else if (data.choices[0].delta.content) {
-                            contentElement.textContent += data.choices[0].delta.content;
+        .then(response => response.text())
+        .then(data => {
+            const events = data.trim().split('\n');
+            for (let event of events) {
+                if (event.startsWith('data: ')) {
+                    const line = event.slice(6).trim();
+                    if (line.startsWith('{') && line.endsWith('}')) {
+                        const output = JSON.parse(line);
+                        if (output.role === 'system' || output.role === 'assistant') {
+                            contentElement.innerHTML += `<div>${output.role}: ${output.content}</div>`;
                         }
-                    } catch (error) {
-                        console.error('Error parsing JSON', error);
                     }
-                }
-
-                if (!done) {
-                    return reader.read().then(processText);
                 }
             }
-
-            return reader.read().then(processText);
         });
 });
