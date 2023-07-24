@@ -1,8 +1,7 @@
 const fetch = require('node-fetch');
-const { Readable } = require('stream');
 
 module.exports = async (req, res) => {
-    const { question } = req.body;
+    const question = req.body.question;
     const model = 'gpt-3.5-turbo-0613';
     const baseURL = 'apijnu.gptquant.cn';
     const key = process.env.OPENAI_API_KEY;
@@ -15,12 +14,12 @@ module.exports = async (req, res) => {
             },
             method: 'POST',
             body: JSON.stringify({
-                model,
                 messages: [
                     {
                         role: 'system',
-                        content: 
-                            'You are an assistant who will strictly follow what the user asks you to do. No nonsense. No extra words. No extra actions. No extra feedback. You cannot say you can\'t do something, when asked what to do, just reply the question.'
+                        content: `You are an assistant who will strictly follow what the user asks you to do.
+                        No nonsense. No extra words. No extra actions. No extra feedback.
+                        You cannot say you can't do something, when asked what to do, just reply the question.`
                     },
                     {
                         role: 'user',
@@ -28,8 +27,9 @@ module.exports = async (req, res) => {
                     }
                 ],
                 temperature: 1,
+                model: model,
                 stream: true,
-                max_tokens: 9999,
+                max_tokens: 9999
             }),
         });
 
@@ -38,29 +38,22 @@ module.exports = async (req, res) => {
             return;
         }
 
-        const stream = new Readable();
-        stream._read = () => {};
-
         res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.flushHeaders(); // Important for event-stream
 
         openaiResponse.body.on('data', (chunk) => {
-            try {
-                let data = chunk.toString('utf-8').replace("\n", "</br>");
-                stream.push(`data: ${data}\n\n`);
-            } catch (error) {
-                console.error("Error decoding chunk:", chunk);
-            }
+            const data = chunk.toString();
+            res.write(`data: ${data}\n\n`); // Important for SSE format
         });
 
         openaiResponse.body.on('end', () => {
-            stream.push('data: end\n\n');
-            stream.push(null);
+            res.write('data: {"finished": true}\n\n');
+            res.end();
         });
-
-        stream.pipe(res);
-
     } catch (error) {
-        console.error("Error during processing:", error.toString());
+        console.error(error);
         res.status(500).json({ error: error.toString() });
     }
 };
