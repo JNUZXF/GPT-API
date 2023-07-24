@@ -25,37 +25,41 @@ document.getElementById('form').addEventListener('submit', async (event) => {
   let lastMessage = '';
 
   // This function handles the stream of data
-  async function readStream() {
-    const { value, done } = await reader.read();
+// This function handles the stream of data
+async function readStream() {
+  const { value, done } = await reader.read();
 
-    if (done) {
-      return;
-    }
+  if (done) {
+    return;
+  }
 
-    // Convert the Uint8Array to a string and add it to the last message
-    lastMessage += new TextDecoder().decode(value);
+  // Convert the Uint8Array to a string and add it to the last message
+  lastMessage += new TextDecoder().decode(value);
 
-    // Check if the last message is complete (ends with two newline characters)
-    while (lastMessage.includes('\n\n')) {
-      // Find the first complete message
-      const endOfMessage = lastMessage.indexOf('\n\n');
-      const completeMessage = lastMessage.slice(0, endOfMessage);
+  // Check if the last message is complete (ends with two newline characters)
+  while (lastMessage.includes('\n\n')) {
+    // Find the first complete message
+    const endOfMessage = lastMessage.indexOf('\n\n');
+    const completeMessage = lastMessage.slice(0, endOfMessage);
 
-      // Parse the JSON object and get the AI's message
-      const messageObj = JSON.parse(completeMessage.replace('data: ', ''));
-      const aiMessage = messageObj.choices[0].delta.content;
+    // Parse the JSON object and get the AI's message
+    const messageObj = JSON.parse(completeMessage.replace(/^data: /, ''));
+    const aiMessage = messageObj.choices[0].delta.content;
 
-      // Append the AI's message to the messages container
+    // Append the AI's message to the messages container, if it's not empty
+    if (aiMessage) {
       messagesContainer.innerHTML += `<div class="message ai-message">${aiMessage}</div>`;
       window.scrollTo(0, document.body.scrollHeight);
-
-      // Start a new message with any remaining text
-      lastMessage = lastMessage.slice(endOfMessage + 2);
     }
 
-    // Keep reading the stream
-    readStream();
+    // Start a new message with any remaining text
+    lastMessage = lastMessage.slice(endOfMessage + 2);
   }
+
+  // Keep reading the stream
+  readStream();
+}
+
 
   readStream().catch((error) => {
     console.error('Error while reading the response stream', error);
