@@ -32,7 +32,8 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         prompt: allMessages.map(message => message.content).join("\n"),
         temperature: 0.5,
-        max_tokens: 9999
+        max_tokens: 9999，
+        model:'gpt-3.5-turbo'
       }),
     });
 
