@@ -29,14 +29,13 @@ module.exports = async (req, res) => {
       return;
     }
 
-    res.setHeader('Content-Type', 'text/plain');
-
+    let result = '';
     openaiResponse.body.on('data', (chunk) => {
-      res.write(chunk.toString());
+      result += chunk.toString();
     });
 
     openaiResponse.body.on('end', () => {
-      res.end();
+      res.send(result);
     });
     
   } catch (error) {
