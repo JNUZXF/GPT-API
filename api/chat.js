@@ -21,7 +21,6 @@ module.exports = async (req, res) => {
           content: message.content,
         })),
         temperature: 0.5,
-        max_tokens: 9999,
         stream: true,
       }),
     });
