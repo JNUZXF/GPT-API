@@ -23,7 +23,8 @@ module.exports = async (req, res) => {
         model: "gpt-3.5-turbo",
         messages:messages,
         temperature: 0.5,
-        max_tokens: 9999
+        max_tokens: 9999,
+        stream:True
       }),
     });
 
