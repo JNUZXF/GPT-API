@@ -20,6 +20,8 @@ document.getElementById('form').addEventListener('submit', async (event) => {
     },
     body: JSON.stringify({ messages: [message] }),
   });
+  console.log(response);
+  
   const reader = response.body.getReader();
   let lastMessage = '';
 
@@ -40,27 +42,14 @@ async function readStream() {
     const endOfMessage = lastMessage.indexOf('\n\n');
     const completeMessage = lastMessage.slice(0, endOfMessage);
 
-    // Split the message into chunks by 'data: '
-    const chunks = completeMessage.split('\n\ndata: ');
-    
-    // Parse each chunk and append the AI's message to the messages container
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      console.log(chunk);
-      // Only parse the chunk if it's a complete JSON object
-      if (chunk.endsWith('\n')) {
-        const messageObj = JSON.parse(chunk.slice(0, -1));
-        const aiMessage = messageObj.choices[0].delta.content;
-        console.log(aiMessage);
-        // Append the AI's message to the messages container, if it's not empty
-        if (aiMessage) {
-          messagesContainer.innerHTML += `<div class="message ai-message">${aiMessage}</div>`;
-          window.scrollTo(0, document.body.scrollHeight);
-        }
-      } else {
-        // If the chunk is not a complete JSON object, keep it for the next data event
-        lastMessage = 'data: ' + chunk;
-      }
+    // Parse the JSON object and get the AI's message
+    const messageObj = JSON.parse(completeMessage.replace(/^data: /, '').trim());
+    const aiMessage = messageObj.choices[0].delta.content;
+
+    // Append the AI's message to the messages container, if it's not empty
+    if (aiMessage) {
+      messagesContainer.innerHTML += `<div class="message ai-message">${aiMessage}</div>`;
+      window.scrollTo(0, document.body.scrollHeight);
     }
 
     // Start a new message with any remaining text
@@ -70,6 +59,7 @@ async function readStream() {
   // Keep reading the stream
   readStream();
 }
+
 
 
   readStream().catch((error) => {
