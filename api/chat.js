@@ -16,6 +16,12 @@ module.exports = async (req, res) => {
   // Include system message at the beginning of the messages array
   const allMessages = [systemMessage].concat(messages);
 
+  // Ensure all messages have a 'content' property
+  if (!allMessages.every(message => message.content)) {
+    res.status(400).json({ error: "All messages must have a 'content' property." });
+    return;
+  }
+
   try {
     const openaiResponse = await fetch(`https://${baseURL}/v1/chat/completions`, {
       headers: {
@@ -26,8 +32,7 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         prompt: allMessages.map(message => message.content).join("\n"),
         temperature: 0.5,
-        max_tokens: 9999,
-        model = 'gpt-3.5-turbo'
+        max_tokens: 9999
       }),
     });
 
@@ -39,8 +44,11 @@ module.exports = async (req, res) => {
     const data = await openaiResponse.json();
     res.setHeader('Content-Type', 'text/plain');
 
+    // Get the response content
+    const responseContent = data.choices[0].message.content;
+    
     // Send each line of the output separately
-    for (const line of data.choices[0].text.trim().split('\n')) {
+    for (const line of responseContent.split('\n')) {
       res.write(`data: ${line}\n\n`);
     }
     res.end();
