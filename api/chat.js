@@ -1,3 +1,4 @@
+// api/chat.js
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
@@ -21,7 +22,7 @@ module.exports = async (req, res) => {
         })),
         temperature: 0.5,
         max_tokens: 9999,
-        stream:true
+        stream: true,
       }),
     });
 
@@ -30,15 +31,19 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const data = await openaiResponse.json();
-    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Type', 'text/event-stream');
+    
+    // Instead of waiting for the entire response to arrive, start processing the data as soon as it arrives
+    const reader = openaiResponse.body.getReader();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) {
+        break;
+      }
 
-    // Get the response content
-    const responseContent = data.choices[0].message.content;
-
-    // Send each line of the output separately
-    for (const line of responseContent.split('\n')) {
-      res.write(`data: ${line}\n\n`);
+      // Convert the Uint8Array to a string and send it to the client
+      const text = new TextDecoder().decode(value);
+      res.write(`data: ${text}\n\n`);
     }
     res.end();
 
