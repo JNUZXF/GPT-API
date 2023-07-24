@@ -17,7 +17,7 @@ document.getElementById('form').addEventListener('submit', function (event) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ messages: [{ role: 'user', content: userMessage }] })
+    body: JSON.stringify({ question: userMessage }) 
     })
         .then(response => {
             const reader = response.body.getReader();
