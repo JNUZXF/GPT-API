@@ -1,15 +1,15 @@
 // public/script.js
 document.getElementById('form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  
+
   const inputField = document.getElementById('input');
   const messagesContainer = document.getElementById('messages');
-  
+
   const message = {
     role: 'user',
     content: inputField.value,
   };
-  
+
   inputField.value = '';
   messagesContainer.innerHTML += `<div class="message user-message">${message.content}</div>`;
 
@@ -20,7 +20,6 @@ document.getElementById('form').addEventListener('submit', async (event) => {
     },
     body: JSON.stringify({ messages: [message] }),
   });
-  console.log(response);
 
   const reader = response.body.getReader();
   let lastMessage = '';
@@ -37,14 +36,21 @@ document.getElementById('form').addEventListener('submit', async (event) => {
     lastMessage += new TextDecoder().decode(value);
 
     // Check if the last message is complete (ends with two newline characters)
-    while (lastMessage.endsWith('\n\n')) {
-      // If it is, remove the trailing newline characters and append it to the messages container
-      const completeMessage = lastMessage.slice(0, -2);
-      messagesContainer.innerHTML += `<div class="message ai-message">${completeMessage}</div>`;
+    while (lastMessage.includes('\n\n')) {
+      // Find the first complete message
+      const endOfMessage = lastMessage.indexOf('\n\n');
+      const completeMessage = lastMessage.slice(0, endOfMessage);
+
+      // Parse the JSON object and get the AI's message
+      const messageObj = JSON.parse(completeMessage.replace('data: ', ''));
+      const aiMessage = messageObj.choices[0].delta.content;
+
+      // Append the AI's message to the messages container
+      messagesContainer.innerHTML += `<div class="message ai-message">${aiMessage}</div>`;
       window.scrollTo(0, document.body.scrollHeight);
 
       // Start a new message with any remaining text
-      lastMessage = lastMessage.slice(completeMessage.length + 2);
+      lastMessage = lastMessage.slice(endOfMessage + 2);
     }
 
     // Keep reading the stream
