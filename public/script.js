@@ -9,10 +9,10 @@ document.getElementById('form').addEventListener('submit', async (event) => {
     role: 'user',
     content: inputField.value,
   };
-
+  
   inputField.value = '';
   messagesContainer.innerHTML += `<div class="message user-message">${message.content}</div>`;
-  console.log(response);
+  
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: {
@@ -20,7 +20,7 @@ document.getElementById('form').addEventListener('submit', async (event) => {
     },
     body: JSON.stringify({ messages: [message] }),
   });
-
+  console.log(response);
   const reader = response.body.getReader();
   let lastMessage = '';
 
