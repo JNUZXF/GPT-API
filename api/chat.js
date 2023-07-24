@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
   const allMessages = [systemMessage].concat(messages);
 
   try {
-    const openaiResponse = await fetch(`https://${baseURL}/v1/engines/${model}/completions`, {
+    const openaiResponse = await fetch(`https://${baseURL}/v1/chat/completions`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${key}`,
@@ -26,7 +26,8 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         prompt: allMessages.map(message => message.content).join("\n"),
         temperature: 0.5,
-        max_tokens: 9999
+        max_tokens: 9999,
+        model = 'gpt-3.5-turbo'
       }),
     });
 
